@@ -19,6 +19,16 @@ fun hostString(hostId: Long): String {
     }!!
 }
 
+fun deviceName(deviceId: Long): Device {
+    return rDeviceCache.getOrPut(deviceId) {
+        Devices.select {
+            Devices.id eq deviceId
+        }.limit(1, 0).first().let {
+            Device(it[Devices.id], it[Devices.name], it[Devices.factory], it[Devices.identify])
+        }
+    }!!
+}
+
 fun hostId(host: String): Long {
     return hostCache.getOrPut(host) {
         Hosts.select {
@@ -74,7 +84,7 @@ class HistoryFacadeImpl : HistoryFacade {
             it[HistoryEntries.url],
             it[HistoryEntries.title],
             it[HistoryEntries.accepted],
-            rDeviceCache[it[HistoryEntries.deviceId]]!!
+            deviceName(it[HistoryEntries.deviceId])!!
         )
     }
 

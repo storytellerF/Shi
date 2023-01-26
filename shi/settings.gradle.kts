@@ -1,0 +1,1 @@
+rootProject.name = "com.storyteller_f.shi"

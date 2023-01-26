@@ -1,0 +1,92 @@
+package com.storyteller_f.database
+
+import com.storyteller_f.obj.*
+import kotlinx.coroutines.*
+import org.h2.util.SmallLRUCache
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.*
+import org.jetbrains.exposed.sql.transactions.experimental.*
+
+val hostCache = SmallLRUCache.newInstance<String, Long>(1000)
+val rHostCache = SmallLRUCache.newInstance<Long, String>(1000)
+val rDeviceCache = SmallLRUCache.newInstance<Long, Device>(1000)
+
+fun hostString(hostId: Long): String {
+    return rHostCache.getOrPut(hostId) {
+        Hosts.select {
+            Hosts.id eq hostId
+        }.limit(1, 0).first()[Hosts.value]
+    }!!
+}
+
+fun hostId(host: String): Long {
+    return hostCache.getOrPut(host) {
+        Hosts.select {
+            Hosts.value eq host
+        }.first()[Hosts.id]
+    }!!
+}
+
+object DatabaseFactory {
+    fun init() {
+        val driverClassName = "org.h2.Driver"
+        val jdbcURL = "jdbc:h2:mem:shi;DB_CLOSE_DELAY=-1"
+        Database.connect(jdbcURL, driverClassName)
+        transaction {
+            addLogger(StdOutSqlLogger)
+            SchemaUtils.create(HistoryEntries, Devices, Hosts)
+        }
+    }
+
+    suspend fun <T> dbQuery(block: suspend () -> T): T =
+        newSuspendedTransaction(Dispatchers.IO) { block() }
+}
+
+interface HistoryFacade {
+    suspend fun search(): List<HistoryEntry>
+    suspend fun insert(entry: HistoryEntry)
+}
+
+interface DeviceFacade {
+    suspend fun search(id: Long): Device
+    suspend fun insert(device: Device)
+}
+
+interface HostFacade {
+    suspend fun search()
+    suspend fun insert()
+}
+
+
+class HistoryFacadeImpl : HistoryFacade {
+    override suspend fun search(): List<HistoryEntry> {
+        return DatabaseFactory.dbQuery {
+            HistoryEntries.selectAll().map(::convert)
+        }
+    }
+
+    private fun convert(it: ResultRow): HistoryEntry {
+        return HistoryEntry(
+            it[HistoryEntries.id],
+            hostString(it[HistoryEntries.host]),
+            hostString(it[HistoryEntries.mainHost]),
+            0L,
+            it[HistoryEntries.url],
+            it[HistoryEntries.title],
+            it[HistoryEntries.accepted],
+            rDeviceCache[it[HistoryEntries.deviceId]]!!
+        )
+    }
+
+    override suspend fun insert(entry: HistoryEntry) {
+        DatabaseFactory.dbQuery {
+            HistoryEntries.insert {
+                it[host] = hostId(entry.host)
+                it[mainHost] = hostId(entry.mainHost)
+                it[deviceId] = entry.device.deviceId
+            }
+        }
+    }
+
+
+}

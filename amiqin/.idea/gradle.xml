@@ -9,9 +9,17 @@
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="modules">
           <set>
+            <option value="$USER_HOME$/AndroidStudioProjects/FilterUIProject/config-core" />
+            <option value="$USER_HOME$/AndroidStudioProjects/FilterUIProject/config_edit" />
+            <option value="$USER_HOME$/AndroidStudioProjects/FilterUIProject/filter-core" />
+            <option value="$USER_HOME$/AndroidStudioProjects/FilterUIProject/filter-ui" />
+            <option value="$USER_HOME$/AndroidStudioProjects/FilterUIProject/recycleview_ui_extra" />
+            <option value="$USER_HOME$/AndroidStudioProjects/FilterUIProject/sort-core" />
+            <option value="$USER_HOME$/AndroidStudioProjects/FilterUIProject/sort-ui" />
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/shared" />
+            <option value="$PROJECT_DIR$/shi-config" />
           </set>
         </option>
       </GradleProjectSettings>

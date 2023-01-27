@@ -36,7 +36,7 @@ fun Application.configureRouting() {
             }
             val readLines = File("test.txt").readLines().map {
                 val split = it.split("\t")
-                split[0] to split[1] to (split[2].toDouble().toInt() + apply.timeInMillis)
+                split[0] to split[1] to (split[2].toDouble().toInt() * 1000 + apply.timeInMillis)
             }
             DatabaseFactory.dbQuery {
                 HistoryEntries.batchInsert(readLines) {

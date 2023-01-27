@@ -37,6 +37,7 @@ object HistoryEntries : Table() {
     val url = varchar("url", 1000)
     val title = varchar("title", 1000)
     val accepted = bool("accepted")
+    val visitTime = long("visit_time")
     override val primaryKey: PrimaryKey
         get() = PrimaryKey(id)
 }

@@ -53,7 +53,7 @@ object DatabaseFactory {
 }
 
 interface HistoryFacade {
-    suspend fun search(): List<HistoryEntry>
+    suspend fun search(start: Long, count: Int): List<HistoryEntry>
     suspend fun insert(entry: HistoryEntry)
 }
 
@@ -69,9 +69,9 @@ interface HostFacade {
 
 
 class HistoryFacadeImpl : HistoryFacade {
-    override suspend fun search(): List<HistoryEntry> {
+    override suspend fun search(start: Long, count: Int): List<HistoryEntry> {
         return DatabaseFactory.dbQuery {
-            HistoryEntries.selectAll().map(::convert)
+            HistoryEntries.selectAll().limit(count, start).map(::convert)
         }
     }
 
@@ -80,7 +80,7 @@ class HistoryFacadeImpl : HistoryFacade {
             it[HistoryEntries.id],
             hostString(it[HistoryEntries.host]),
             hostString(it[HistoryEntries.mainHost]),
-            0L,
+            it[HistoryEntries.visitTime],
             it[HistoryEntries.url],
             it[HistoryEntries.title],
             it[HistoryEntries.accepted],

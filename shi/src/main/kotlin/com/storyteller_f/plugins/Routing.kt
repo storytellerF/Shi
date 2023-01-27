@@ -11,7 +11,6 @@ import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.insert
 import java.io.File
 import java.util.Calendar
-import java.util.Date
 
 fun Application.configureRouting() {
     val dao = HistoryFacadeImpl().apply {
@@ -47,6 +46,7 @@ fun Application.configureRouting() {
                     this[HistoryEntries.url] = it.first.second
                     this[HistoryEntries.title] = it.first.first
                     this[HistoryEntries.accepted] = false
+                    this[HistoryEntries.visitTime] = it.second
                 }
             }
 
@@ -57,7 +57,10 @@ fun Application.configureRouting() {
             call.respondText("Hello World!")
         }
         get("/search") {
-            call.respond(dao.search())
+            val start = call.parameters["start"]?.toLong() ?: 0
+            val count = call.parameters["count"]?.toInt() ?: return@get
+            println("start $start count $count")
+            call.respond(dao.search(start, count))
         }
     }
 }

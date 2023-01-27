@@ -3,23 +3,23 @@ package com.storyteller_f.amiqin
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.paging.LoadState
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.items
 import com.storyteller_f.amiqin.ui.theme.AmiqinTheme
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -32,6 +32,10 @@ import kotlinx.serialization.Serializable
 lateinit var httpClient: HttpClient
 
 class MainActivity : ComponentActivity() {
+    private val pager = Pager(PagingConfig(30)) {
+        ExamplePagingSource()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         httpClient = HttpClient(CIO) {
@@ -43,7 +47,7 @@ class MainActivity : ComponentActivity() {
             AmiqinTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    Amiqin("Android")
+                    Amiqin("Android", pager)
                 }
             }
         }
@@ -51,10 +55,10 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Amiqin(name: String) {
+fun Amiqin(name: String, pager: Pager<Int, HistoryEntry>) {
     Column {
         Text(text = "Hello $name!")
-        HistoryContent()
+        HistoryContent(pager)
     }
 }
 
@@ -62,35 +66,33 @@ fun Amiqin(name: String) {
 @Composable
 fun DefaultPreview() {
     AmiqinTheme {
-        Amiqin("Android")
+//        Amiqin("Android", pager)
     }
 }
 
 @Composable
-fun HistoryContent() {
-    val list by loadHistory()
-    when (list) {
-        is ResponseState.Loading -> {
+fun HistoryContent(pager: Pager<Int, HistoryEntry>) {
+//    val list by loadHistory()
+    val list = pager.flow.collectAsLazyPagingItems()
+    when (val loadState = list.loadState.refresh) {
+        is LoadState.Loading -> {
             Text(text = "loading")
         }
-        is ResponseState.Error -> {
-            val text = (list as ResponseState.Error).throwable.localizedMessage
+        is LoadState.Error -> {
+            val text = loadState.error.localizedMessage
             Text(text = "oh~~~ $text")
         }
-        is ResponseState.Success -> {
-            val item = (list as ResponseState.Success<List<HistoryEntry>>).item
-            HistoryList(item)
+        is LoadState.NotLoading -> {
+            LazyColumn(content = {
+                items(items = list, key = {
+                    it.entryId
+                }) {
+                    if (it != null)
+                        HistoryEntryView(it)
+                }
+            })
         }
     }
-}
-
-@Composable
-fun HistoryList(list: List<HistoryEntry>) {
-    LazyColumn(content = {
-        items(list) {
-            HistoryEntryView(it)
-        }
-    })
 }
 
 class HistoryEntryPreviewProvider : PreviewParameterProvider<HistoryEntry> {
@@ -115,17 +117,6 @@ fun HistoryEntryView(@PreviewParameter(HistoryEntryPreviewProvider::class) histo
         }
     }
 }
-
-@Composable
-fun loadHistory() = produceState<ResponseState<List<HistoryEntry>>>(initialValue = ResponseState.Loading, producer = {
-    value = try {
-        val response = httpClient.get("http://10.0.2.2:8080/search")
-        val body = response.body<List<HistoryEntry>>()
-        ResponseState.Success(body)
-    } catch (e: Exception) {
-        ResponseState.Error(e)
-    }
-})
 
 sealed class ResponseState<out T> {
     object Loading : ResponseState<Nothing>()

@@ -6,24 +6,25 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 
 class ExamplePagingSource(
+    private val pageSize: Int = 30
 ) : PagingSource<Int, HistoryEntry>() {
     override suspend fun load(
         params: LoadParams<Int>
     ): LoadResult<Int, HistoryEntry> {
         try {
             val nextPageNumber = params.key ?: 0
-            val pageSize = 30
             val start = nextPageNumber * pageSize
             val response = httpClient.get("http://10.0.2.2:8080/search?start=$start&count=$pageSize")
             val body = response.body<List<HistoryEntry>>()
             return LoadResult.Page(
                 data = body,
                 prevKey = null, // Only paging forward.
-                nextKey = nextPageNumber + 1
+                nextKey = if (body.isNotEmpty()) nextPageNumber + 1 else null
             )
         } catch (e: Exception) {
             // Handle errors in this block and return LoadResult.Error if it is an
             // expected error (such as a network failure).
+            e.printStackTrace()
             return LoadResult.Error(e)
         }
     }

@@ -34,9 +34,12 @@ fun Application.configureRouting() {
             val apply = Calendar.getInstance().apply {
                 set(2001, 1, 1)
             }
+            val timeInMillis = apply.timeInMillis
             val readLines = File("test.txt").readLines().map {
                 val split = it.split("\t")
-                split[0] to split[1] to (split[2].toDouble().toInt() * 1000 + apply.timeInMillis)
+                val toDouble = split[2].toDouble()
+                val toInt = (toDouble * 1000).toLong()
+                split[0] to split[1] to toInt + timeInMillis
             }
             DatabaseFactory.dbQuery {
                 HistoryEntries.batchInsert(readLines) {

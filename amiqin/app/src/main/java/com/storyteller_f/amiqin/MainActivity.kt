@@ -11,7 +11,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -20,6 +19,8 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.typeadapters.RuntimeTypeAdapterFactory
 import com.storyteller_f.amiqin.filter.FilterFactory
 import com.storyteller_f.amiqin.filter.TitleFilter
@@ -38,7 +39,12 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.Serializable
 
 lateinit var httpClient: HttpClient
-
+private val factory = RuntimeTypeAdapterFactory.of(
+    FilterConfigItem::class.java, "config-item-key"
+).registerSubtype(TitleFilterConfigItem::class.java, "title")
+private val gson = GsonBuilder().apply {
+    registerTypeAdapterFactory(factory)
+}.create()
 class MainActivity : ComponentActivity() {
     private val pager = Pager(PagingConfig(30)) {
         ExamplePagingSource()
@@ -51,11 +57,28 @@ class MainActivity : ComponentActivity() {
                 json()
             }
         }
+        val filterDialog = FilterDialog(this, listOf(TitleFilter(TitleFilterConfigItem("^$"))), FilterFactory())
+        filterDialog.setListener(object : FilterDialog.Listener<HistoryEntry> {
+            override fun onSaveState(filters: MutableList<Filter<HistoryEntry>>?): MutableList<FilterConfigItem> {
+                return filters.orEmpty().map {
+                    (it as TitleFilter).item
+                }.toMutableList()
+            }
+
+            override fun onInitHistory(configItems: MutableList<FilterConfigItem>?) {
+                filterDialog.add(configItems.orEmpty().map {
+                    TitleFilter(it as TitleFilterConfigItem)
+                })
+            }
+
+        })
+
+        filterDialog.init("filter", factory)
         setContent {
             AmiqinTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    Amiqin("Android", pager)
+                    Amiqin("Android", pager, filterDialog)
                 }
             }
         }
@@ -63,33 +86,19 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Amiqin(name: String, pager: Pager<Int, HistoryEntry>) {
-    val context = LocalContext.current
+fun Amiqin(name: String, pager: Pager<Int, HistoryEntry>, filterDialog: FilterDialog<HistoryEntry>) {
     Column {
         Row() {
             Button(onClick = {
-                val filterDialog = FilterDialog(context, listOf(TitleFilter(TitleFilterConfigItem("^$"))), FilterFactory())
-                filterDialog.setListener(object : FilterDialog.Listener<HistoryEntry> {
-                    override fun onSaveState(filters: MutableList<Filter<HistoryEntry>>?): MutableList<FilterConfigItem> {
-                        return filters.orEmpty().map {
-                            (it as TitleFilter).item
-                        }.toMutableList()
-                    }
-
-                    override fun onInitHistory(configItems: MutableList<FilterConfigItem>?) {
-                        filterDialog.add(configItems.orEmpty().map {
-                            TitleFilter(it as TitleFilterConfigItem)
-                        })
-                    }
-
-                })
-                val factory = RuntimeTypeAdapterFactory.of(
-                    FilterConfigItem::class.java, "config-item-key"
-                ).registerSubtype(TitleFilterConfigItem::class.java, "title")
-                filterDialog.init("filter", factory)
                 filterDialog.show()
             }) {
                 Text(text = "filter")
+            }
+            Button(onClick = {
+                val toJson = gson.toJson(filterDialog.current())
+                println(toJson)
+            }) {
+                Text(text = "start")
             }
         }
         Text(text = "Hello $name!")

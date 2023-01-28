@@ -20,7 +20,19 @@ application {
 }
 
 repositories {
+    maven { setUrl("https://artifactory.cronapp.io/public-release/") }
+    google()
     mavenCentral()
+    gradlePluginPortal()
+}
+
+allprojects {
+    repositories {
+        maven { setUrl("https://artifactory.cronapp.io/public-release/") }
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
 }
 
 dependencies {
@@ -40,4 +52,9 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-dao:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
     implementation("com.h2database:h2:$h2_version")
+    //
+    implementation(project(":config-core"))
+    implementation(project(":filter-core"))
+    implementation(project(":sort-core"))
+    implementation(project(":shi-config"))
 }

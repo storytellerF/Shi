@@ -1,6 +1,8 @@
 package com.storyteller_f.database
 
+import com.storyteller_f.filter_core.config.FilterConfig
 import com.storyteller_f.obj.*
+import com.storyteller_f.shi.TitleFilterConfigItem
 import kotlinx.coroutines.*
 import org.h2.util.SmallLRUCache
 import org.jetbrains.exposed.sql.*
@@ -53,7 +55,7 @@ object DatabaseFactory {
 }
 
 interface HistoryFacade {
-    suspend fun search(start: Long, count: Int): List<HistoryEntry>
+    suspend fun search(start: Long, count: Int, filter: FilterConfig? = null): List<HistoryEntry>
     suspend fun insert(entry: HistoryEntry)
 }
 
@@ -69,9 +71,14 @@ interface HostFacade {
 
 
 class HistoryFacadeImpl : HistoryFacade {
-    override suspend fun search(start: Long, count: Int): List<HistoryEntry> {
+    override suspend fun search(start: Long, count: Int, filter: FilterConfig?): List<HistoryEntry> {
         return DatabaseFactory.dbQuery {
-            HistoryEntries.selectAll().limit(count, start).map(::convert)
+            HistoryEntries.select {
+                if (filter != null) {
+                    val regexp = filter.configItems.orEmpty().filterIsInstance<TitleFilterConfigItem>().first().regexp
+                    HistoryEntries.title.regexp(regexp)
+                } else Op.TRUE
+            }.limit(count, start).map(::convert)
         }
     }
 

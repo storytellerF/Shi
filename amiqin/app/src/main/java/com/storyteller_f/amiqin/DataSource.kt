@@ -5,8 +5,9 @@ import androidx.paging.PagingState
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 
-class ExamplePagingSource(
-    private val pageSize: Int = 30
+class HistoryPagingSource(
+    private val pageSize: Int = 30,
+    private val search: String,
 ) : PagingSource<Int, HistoryEntry>() {
     override suspend fun load(
         params: LoadParams<Int>
@@ -14,7 +15,9 @@ class ExamplePagingSource(
         try {
             val nextPageNumber = params.key ?: 0
             val start = nextPageNumber * pageSize
-            val response = httpClient.get("http://10.0.2.2:8080/search?start=$start&count=$pageSize")
+            val response = httpClient.post("http://10.0.2.2:8080/search?start=$start&count=$pageSize") {
+                setBody(search)
+            }
             val body = response.body<List<HistoryEntry>>()
             return LoadResult.Page(
                 data = body,

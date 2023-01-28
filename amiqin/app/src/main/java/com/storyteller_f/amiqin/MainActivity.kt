@@ -8,20 +8,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.paging.LoadState
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import com.google.gson.typeadapters.RuntimeTypeAdapterFactory
 import com.storyteller_f.amiqin.filter.FilterFactory
 import com.storyteller_f.amiqin.filter.TitleFilter
 import com.storyteller_f.amiqin.ui.theme.AmiqinTheme
@@ -29,6 +29,7 @@ import com.storyteller_f.filter_core.Filter
 import com.storyteller_f.filter_core.config.FilterConfigItem
 import com.storyteller_f.filter_core.filter.Filterable
 import com.storyteller_f.filter_ui.FilterDialog
+import com.storyteller_f.shi.Factory
 import com.storyteller_f.shi.TitleFilterConfigItem
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -37,18 +38,11 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.Serializable
+import java.util.*
 
 lateinit var httpClient: HttpClient
-private val factory = RuntimeTypeAdapterFactory.of(
-    FilterConfigItem::class.java, "config-item-key"
-).registerSubtype(TitleFilterConfigItem::class.java, "title")
-private val gson = GsonBuilder().apply {
-    registerTypeAdapterFactory(factory)
-}.create()
+
 class MainActivity : ComponentActivity() {
-    private val pager = Pager(PagingConfig(30)) {
-        ExamplePagingSource()
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,12 +67,12 @@ class MainActivity : ComponentActivity() {
 
         })
 
-        filterDialog.init("filter", factory)
+        filterDialog.init("filter", Factory.factory)
         setContent {
             AmiqinTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    Amiqin("Android", pager, filterDialog)
+                    Amiqin(filterDialog)
                 }
             }
         }
@@ -86,7 +80,15 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Amiqin(name: String, pager: Pager<Int, HistoryEntry>, filterDialog: FilterDialog<HistoryEntry>) {
+fun Amiqin(filterDialog: FilterDialog<HistoryEntry>) {
+    var search by rememberSaveable { mutableStateOf("") }
+    val pager by remember(search) {
+        derivedStateOf {
+            Pager(PagingConfig(30)) {
+                HistoryPagingSource(search = search)
+            }
+        }
+    }
     Column {
         Row() {
             Button(onClick = {
@@ -95,13 +97,14 @@ fun Amiqin(name: String, pager: Pager<Int, HistoryEntry>, filterDialog: FilterDi
                 Text(text = "filter")
             }
             Button(onClick = {
-                val toJson = gson.toJson(filterDialog.current())
+                val toJson = Factory.gson.toJson(filterDialog.current())
+                search = toJson
                 println(toJson)
             }) {
                 Text(text = "start")
             }
         }
-        Text(text = "Hello $name!")
+        Text(text = search.ifEmpty { "empty" })
         HistoryContent(pager)
     }
 }
@@ -141,22 +144,24 @@ fun HistoryContent(pager: Pager<Int, HistoryEntry>) {
 
 class HistoryEntryPreviewProvider : PreviewParameterProvider<HistoryEntry> {
     override val values: Sequence<HistoryEntry>
-        get() = sequenceOf(HistoryEntry(0, "host", "mainHost", 0, "url", "title", false, Device(0, "name", "factory", "identity")))
+        get() = sequenceOf(HistoryEntry(0, "host", "mainHost", 1632160889708, "url", "title", false, Device(0, "name", "factory", "identity")))
 
 }
 
 @Preview
 @Composable
 fun HistoryEntryView(@PreviewParameter(HistoryEntryPreviewProvider::class) historyEntry: HistoryEntry) {
-    Column(Modifier.fillMaxWidth()) {
-        Text(text = historyEntry.title)
+    Column(Modifier.fillMaxWidth().padding(8.dp)) {
+        Text(text = historyEntry.title, fontSize = 13.sp)
         Row {
             Icon(
                 imageVector = Icons.Outlined.CheckCircle,
                 contentDescription = "check",
                 tint = if (historyEntry.accepted) Color.Green else LocalContentColor.current
             )
-            Text(text = historyEntry.time.toString())
+            Text(text = Calendar.getInstance().apply {
+                timeInMillis = historyEntry.time
+            }.time.toString())
             Text(text = historyEntry.accepted.toString())
         }
     }

@@ -3,6 +3,7 @@ package com.storyteller_f.amiqin
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -10,6 +11,7 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -152,17 +154,17 @@ class HistoryEntryPreviewProvider : PreviewParameterProvider<HistoryEntry> {
 @Composable
 fun HistoryEntryView(@PreviewParameter(HistoryEntryPreviewProvider::class) historyEntry: HistoryEntry) {
     Column(Modifier.fillMaxWidth().padding(8.dp)) {
-        Text(text = historyEntry.title, fontSize = 13.sp)
-        Row {
+        Text(text = historyEntry.title, fontSize = 15.sp)
+        Row(modifier = Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 imageVector = Icons.Outlined.CheckCircle,
                 contentDescription = "check",
+                modifier = Modifier.padding(end = 8.dp),
                 tint = if (historyEntry.accepted) Color.Green else LocalContentColor.current
             )
             Text(text = Calendar.getInstance().apply {
                 timeInMillis = historyEntry.time
-            }.time.toString())
-            Text(text = historyEntry.accepted.toString())
+            }.time.toString(), modifier = Modifier.background(Color.LightGray), fontSize = 12.sp)
         }
     }
 }

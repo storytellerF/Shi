@@ -29,7 +29,6 @@ import com.storyteller_f.amiqin.filter.TitleFilter
 import com.storyteller_f.amiqin.ui.theme.AmiqinTheme
 import com.storyteller_f.filter_core.Filter
 import com.storyteller_f.filter_core.config.FilterConfigItem
-import com.storyteller_f.filter_core.filter.Filterable
 import com.storyteller_f.filter_ui.FilterDialog
 import com.storyteller_f.shi.Factory
 import com.storyteller_f.shi.TitleFilterConfigItem
@@ -53,23 +52,25 @@ class MainActivity : ComponentActivity() {
                 json()
             }
         }
-        val filterDialog = FilterDialog(this, listOf(TitleFilter(TitleFilterConfigItem("^$"))), FilterFactory())
-        filterDialog.setListener(object : FilterDialog.Listener<HistoryEntry> {
+        val value = object : FilterDialog.Listener<HistoryEntry> {
             override fun onSaveState(filters: MutableList<Filter<HistoryEntry>>?): MutableList<FilterConfigItem> {
                 return filters.orEmpty().map {
                     (it as TitleFilter).item
                 }.toMutableList()
             }
 
-            override fun onInitHistory(configItems: MutableList<FilterConfigItem>?) {
-                filterDialog.add(configItems.orEmpty().map {
+            override fun onActiveListSelected(dialog: FilterDialog<HistoryEntry>, configItems: MutableList<FilterConfigItem>?) {
+                dialog.add(configItems.orEmpty().map {
                     TitleFilter(it as TitleFilterConfigItem)
                 })
             }
 
-        })
+            override fun onActiveChanged(dialog: FilterDialog<HistoryEntry>?) {
+            }
 
-        filterDialog.init("filter", Factory.factory)
+        }
+        val filterDialog = FilterDialog(this, listOf(TitleFilter(TitleFilterConfigItem("^$"))), FilterFactory(), value, "filter", Factory.factory)
+
         setContent {
             AmiqinTheme {
                 // A surface container using the 'background' color from the theme
@@ -153,7 +154,10 @@ class HistoryEntryPreviewProvider : PreviewParameterProvider<HistoryEntry> {
 @Preview
 @Composable
 fun HistoryEntryView(@PreviewParameter(HistoryEntryPreviewProvider::class) historyEntry: HistoryEntry) {
-    Column(Modifier.fillMaxWidth().padding(8.dp)) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(8.dp)) {
         Text(text = historyEntry.title, fontSize = 15.sp)
         Row(modifier = Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(
@@ -188,7 +192,7 @@ data class HistoryEntry(
     val title: String,
     val accepted: Boolean,
     val device: Device
-) : Filterable()
+)
 
 @Serializable
 data class Host(val id: Long, val value: String)

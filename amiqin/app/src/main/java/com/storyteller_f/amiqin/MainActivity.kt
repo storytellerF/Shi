@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
 import androidx.paging.LoadState
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
@@ -48,6 +49,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         httpClient = HttpClient(CIO) {
             install(ContentNegotiation) {
                 json()
@@ -86,7 +89,7 @@ class MainActivity : ComponentActivity() {
             AmiqinTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().statusBarsPadding(),
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Amiqin(filterDialog)
@@ -107,7 +110,7 @@ fun Amiqin(filterDialog: FilterDialog<HistoryEntry>) {
         }
     }
     Column {
-        Row() {
+        Row {
             Button(onClick = {
                 filterDialog.show()
             }) {

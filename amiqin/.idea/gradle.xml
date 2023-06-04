@@ -7,15 +7,9 @@
         <option name="testRunner" value="GRADLE" />
         <option name="distributionType" value="DEFAULT_WRAPPED" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="gradleJvm" value="jbr-17" />
         <option name="modules">
           <set>
-            <option value="$USER_HOME$/AndroidStudioProjects/FilterUIProject/config-core" />
-            <option value="$USER_HOME$/AndroidStudioProjects/FilterUIProject/config_edit" />
-            <option value="$USER_HOME$/AndroidStudioProjects/FilterUIProject/filter-core" />
-            <option value="$USER_HOME$/AndroidStudioProjects/FilterUIProject/filter-ui" />
-            <option value="$USER_HOME$/AndroidStudioProjects/FilterUIProject/recycleview_ui_extra" />
-            <option value="$USER_HOME$/AndroidStudioProjects/FilterUIProject/sort-core" />
-            <option value="$USER_HOME$/AndroidStudioProjects/FilterUIProject/sort-ui" />
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/shared" />

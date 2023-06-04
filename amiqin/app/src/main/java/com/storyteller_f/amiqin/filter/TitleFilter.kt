@@ -15,6 +15,10 @@ class TitleFilter(item: SimpleRegExpConfigItem) : SimpleRegexpFilter<HistoryEntr
         return 1
     }
 
+    override fun copy(): Any {
+        return TitleFilter(item.copy() as SimpleRegExpConfigItem)
+    }
+
     class ViewHolder(itemView: View) : SimpleRegexpFilter.ViewHolder(itemView)
 }
 

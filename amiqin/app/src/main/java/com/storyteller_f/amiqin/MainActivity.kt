@@ -23,7 +23,8 @@ import androidx.paging.LoadState
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.items
+import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
 import com.storyteller_f.amiqin.filter.FilterFactory
 import com.storyteller_f.amiqin.filter.TitleFilter
 import com.storyteller_f.amiqin.ui.theme.AmiqinTheme
@@ -59,7 +60,10 @@ class MainActivity : ComponentActivity() {
                 }.toMutableList()
             }
 
-            override fun onActiveListSelected(dialog: FilterDialog<HistoryEntry>, configItems: MutableList<FilterConfigItem>?) {
+            override fun onActiveListSelected(
+                dialog: FilterDialog<HistoryEntry>,
+                configItems: MutableList<FilterConfigItem>?
+            ) {
                 dialog.add(configItems.orEmpty().map {
                     TitleFilter(it as TitleFilterConfigItem)
                 })
@@ -69,12 +73,22 @@ class MainActivity : ComponentActivity() {
             }
 
         }
-        val filterDialog = FilterDialog(this, listOf(TitleFilter(TitleFilterConfigItem("^$"))), FilterFactory(), value, "filter", Factory.factory)
+        val filterDialog = FilterDialog(
+            this,
+            listOf(TitleFilter(TitleFilterConfigItem("^$"))),
+            FilterFactory(),
+            value,
+            "filter",
+            Factory.factory
+        )
 
         setContent {
             AmiqinTheme {
                 // A surface container using the 'background' color from the theme
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
                     Amiqin(filterDialog)
                 }
             }
@@ -100,7 +114,7 @@ fun Amiqin(filterDialog: FilterDialog<HistoryEntry>) {
                 Text(text = "filter")
             }
             Button(onClick = {
-                val toJson = Factory.gson.toJson(filterDialog.current())
+                val toJson = Factory.gson.toJson(filterDialog.currentConfig())
                 search = toJson
                 println(toJson)
             }) {
@@ -122,23 +136,30 @@ fun DefaultPreview() {
 
 @Composable
 fun HistoryContent(pager: Pager<Int, HistoryEntry>) {
-//    val list by loadHistory()
     val list = pager.flow.collectAsLazyPagingItems()
     when (val loadState = list.loadState.refresh) {
         is LoadState.Loading -> {
             Text(text = "loading")
         }
+
         is LoadState.Error -> {
             val text = loadState.error.localizedMessage
             Text(text = "oh~~~ $text")
         }
+
         is LoadState.NotLoading -> {
             LazyColumn(content = {
-                items(items = list, key = {
-                    it.entryId
-                }) {
-                    if (it != null)
-                        HistoryEntryView(it)
+                items(
+                    count = list.itemCount,
+                    key = list.itemKey(key = {
+                        it.entryId
+                    }),
+                    contentType = list.itemContentType(
+                    )
+                ) { index ->
+                    val item = list[index]
+                    if (item != null)
+                        HistoryEntryView(item)
                 }
             })
         }
@@ -147,7 +168,18 @@ fun HistoryContent(pager: Pager<Int, HistoryEntry>) {
 
 class HistoryEntryPreviewProvider : PreviewParameterProvider<HistoryEntry> {
     override val values: Sequence<HistoryEntry>
-        get() = sequenceOf(HistoryEntry(0, "host", "mainHost", 1632160889708, "url", "title", false, Device(0, "name", "factory", "identity")))
+        get() = sequenceOf(
+            HistoryEntry(
+                0,
+                "host",
+                "mainHost",
+                1632160889708,
+                "url",
+                "title",
+                false,
+                Device(0, "name", "factory", "identity")
+            )
+        )
 
 }
 
@@ -157,9 +189,13 @@ fun HistoryEntryView(@PreviewParameter(HistoryEntryPreviewProvider::class) histo
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(8.dp)) {
+            .padding(8.dp)
+    ) {
         Text(text = historyEntry.title, fontSize = 15.sp)
-        Row(modifier = Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.padding(top = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Icon(
                 imageVector = Icons.Outlined.CheckCircle,
                 contentDescription = "check",

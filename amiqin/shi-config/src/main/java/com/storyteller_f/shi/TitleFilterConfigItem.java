@@ -8,4 +8,9 @@ public class TitleFilterConfigItem extends SimpleRegExpConfigItem {
     public TitleFilterConfigItem(@NotNull String regexp) {
         super(regexp);
     }
+
+    @Override
+    public Object copy() {
+        return new TitleFilterConfigItem(getRegexp());
+    }
 }

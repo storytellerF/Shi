@@ -84,14 +84,14 @@ class HistoryFacadeImpl : HistoryFacade {
 
     private fun convert(it: ResultRow): HistoryEntry {
         return HistoryEntry(
-            it[HistoryEntries.id],
+            it[HistoryEntries.id.count()],
             hostString(it[HistoryEntries.host]),
             hostString(it[HistoryEntries.mainHost]),
             it[HistoryEntries.visitTime],
             it[HistoryEntries.url],
             it[HistoryEntries.title],
             it[HistoryEntries.accepted],
-            deviceName(it[HistoryEntries.deviceId])!!
+            deviceName(it[HistoryEntries.deviceId])
         )
     }
 

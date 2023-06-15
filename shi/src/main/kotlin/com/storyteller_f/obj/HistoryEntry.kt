@@ -1,6 +1,11 @@
 package com.storyteller_f.obj
 
 import kotlinx.serialization.Serializable
+import org.jetbrains.exposed.dao.EntityClass
+import org.jetbrains.exposed.dao.IntEntity
+import org.jetbrains.exposed.dao.LongEntity
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.Table
 
 @Serializable
@@ -21,8 +26,7 @@ data class HistoryEntry(
 @Serializable
 data class Host(val id: Long, val value: String)
 
-object HistoryEntries : Table() {
-    val id = long("id").autoIncrement()
+object HistoryEntries : LongIdTable() {
 
     /**
      * 完整域名 test.baidu.com
@@ -38,8 +42,19 @@ object HistoryEntries : Table() {
     val title = varchar("title", 1000)
     val accepted = bool("accepted")
     val visitTime = long("visit_time")
-    override val primaryKey: PrimaryKey
-        get() = PrimaryKey(id)
+}
+
+class HistoryEntryEntity(id: EntityID<Long>): LongEntity(id) {
+
+    companion object : EntityClass<Long, HistoryEntryEntity>(HistoryEntries)
+
+    var host by HistoryEntries.host
+    var mainHost by HistoryEntries.mainHost
+    var deviceId by HistoryEntries.deviceId
+    var url by HistoryEntries.url
+    var title by HistoryEntries.title
+    var accepted by HistoryEntries.accepted
+    var visitTime by HistoryEntries.visitTime
 }
 
 object Devices : Table() {
@@ -57,4 +72,3 @@ object Hosts : Table() {
     override val primaryKey: PrimaryKey
         get() = PrimaryKey(id)
 }
-

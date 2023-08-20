@@ -19,7 +19,6 @@ dependencyResolutionManagement {
 }
 rootProject.name = "amiqin"
 include(":app")
-include(":shared")
 include(":shi-config")
 
 val home: String = System.getProperty("user.home")

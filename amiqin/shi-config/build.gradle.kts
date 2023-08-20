@@ -28,7 +28,7 @@ dependencies {
         }
     } else {
         filterArtifact.forEach {
-            api("com.github.storytellerF.FilterUIProject:$it:1.1")
+            api("com.github.storytellerF.FilterUIProject:$it:2.0")
         }
     }
 }

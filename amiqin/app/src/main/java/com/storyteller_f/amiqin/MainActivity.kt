@@ -4,13 +4,28 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,22 +41,19 @@ import androidx.paging.PagingConfig
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import com.storyteller_f.amiqin.filter.FilterFactory
-import com.storyteller_f.amiqin.filter.TitleFilter
 import com.storyteller_f.amiqin.ui.theme.AmiqinTheme
-import com.storyteller_f.filter_core.Filter
-import com.storyteller_f.filter_core.config.FilterConfigItem
-import com.storyteller_f.filter_ui.FilterDialog
+import com.storyteller_f.config_core.Config
+import com.storyteller_f.config_core.EditorKey
+import com.storyteller_f.config_core.editor
 import com.storyteller_f.shi.Factory
-import com.storyteller_f.shi.TitleFilterConfigItem
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
-import io.ktor.serialization.kotlinx.json.*
+import com.storyteller_f.sort_core.config.SortConfig
+import com.storyteller_f.sort_ui.SortDialog
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.Serializable
-import java.util.*
+import java.util.Calendar
 
 lateinit var httpClient: HttpClient
 
@@ -56,51 +68,39 @@ class MainActivity : ComponentActivity() {
                 json()
             }
         }
-        val value = object : FilterDialog.Listener<HistoryEntry> {
-            override fun onSaveState(filters: MutableList<Filter<HistoryEntry>>?): MutableList<FilterConfigItem> {
-                return filters.orEmpty().map {
-                    (it as TitleFilter).item
-                }.toMutableList()
-            }
 
-            override fun onActiveListSelected(
-                dialog: FilterDialog<HistoryEntry>,
-                configItems: MutableList<FilterConfigItem>?
-            ) {
-                dialog.add(configItems.orEmpty().map {
-                    TitleFilter(it as TitleFilterConfigItem)
-                })
-            }
-
-            override fun onActiveChanged(dialog: FilterDialog<HistoryEntry>?) {
-            }
-
-        }
-        val filterDialog = FilterDialog(
-            this,
-            listOf(TitleFilter(TitleFilterConfigItem("^$"))),
-            FilterFactory(),
-            value,
-            "filter",
-            Factory.factory
-        )
 
         setContent {
             AmiqinTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
-                    modifier = Modifier.fillMaxSize().statusBarsPadding(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Amiqin(filterDialog)
+                    Amiqin(::show, ::current)
                 }
             }
         }
     }
+
+    private fun show() {
+//        AmiqinFilterDialogFragment().show(fragmentManager, "test")
+    }
+
+    private fun current(): Config? {
+        val createEditorKey = EditorKey.createEditorKey(filesDir.absolutePath, "sort")
+        return createEditorKey.editor(
+            SortConfig.emptySortListener,
+            SortDialog.configAdapterFactory,
+            Factory.factory
+        ).lastConfig
+    }
 }
 
 @Composable
-fun Amiqin(filterDialog: FilterDialog<HistoryEntry>) {
+fun Amiqin(showDialog: () -> Unit = {}, current: () -> Config? = { null }) {
     var search by rememberSaveable { mutableStateOf("") }
     val pager by remember(search) {
         derivedStateOf {
@@ -112,12 +112,12 @@ fun Amiqin(filterDialog: FilterDialog<HistoryEntry>) {
     Column {
         Row {
             Button(onClick = {
-                filterDialog.show()
+                showDialog()
             }) {
                 Text(text = "filter")
             }
             Button(onClick = {
-                val toJson = Factory.gson.toJson(filterDialog.currentConfig())
+                val toJson = Factory.gson.toJson(current())
                 search = toJson
                 println(toJson)
             }) {

@@ -1,30 +1,33 @@
 package com.storyteller_f.amiqin.filter
 
 import android.view.View
-import android.view.ViewGroup
 import com.storyteller_f.amiqin.HistoryEntry
 import com.storyteller_f.filter_core.config.SimpleRegExpConfigItem
 import com.storyteller_f.filter_ui.adapter.FilterItemContainer
 import com.storyteller_f.filter_ui.adapter.FilterItemViewHolder
 import com.storyteller_f.filter_ui.adapter.FilterViewHolderFactory
-import com.storyteller_f.filter_ui.filter.SimpleRegexpFilter
+import com.storyteller_f.filter_ui.filter.SimpleRegExpFilter
 
-class TitleFilter(item: SimpleRegExpConfigItem) : SimpleRegexpFilter<HistoryEntry>("标题", item) {
-    override fun getMatchString(t: HistoryEntry?) = t?.title.orEmpty()
-    override fun getItemViewType(): Int {
-        return 1
+class TitleFilter(item: SimpleRegExpConfigItem) : SimpleRegExpFilter<HistoryEntry>("标题", item) {
+    override fun getMatchString(t: HistoryEntry): CharSequence = t.title
+    override val itemViewType: Int
+        get() {
+            return 1
+        }
+
+    override fun dup(): Any {
+        return TitleFilter(item.dup() as SimpleRegExpConfigItem)
     }
 
-    override fun copy(): Any {
-        return TitleFilter(item.copy() as SimpleRegExpConfigItem)
-    }
-
-    class ViewHolder(itemView: View) : SimpleRegexpFilter.ViewHolder(itemView)
+    class ViewHolder(itemView: View) : SimpleRegExpFilter.ViewHolder<HistoryEntry>(itemView)
 }
 
-class FilterFactory : FilterViewHolderFactory() {
-    override fun create(parent: ViewGroup, viewType: Int, container: FilterItemContainer): FilterItemViewHolder {
-        SimpleRegexpFilter.ViewHolder.create(parent.context, container.frameLayout)
+class FilterFactory : FilterViewHolderFactory<HistoryEntry>() {
+    override fun create(
+        viewType: Int,
+        container: FilterItemContainer
+    ): FilterItemViewHolder<HistoryEntry> {
+        SimpleRegExpFilter.ViewHolder.create(container)
         return TitleFilter.ViewHolder(container.view)
     }
 

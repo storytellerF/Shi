@@ -41,13 +41,23 @@ import androidx.paging.PagingConfig
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
+import com.storytellerF.compose_ui.FilterDialog
+import com.storytellerF.compose_ui.SimpleFilterView
+import com.storyteller_f.amiqin.filter.TitleFilter
+import com.storyteller_f.amiqin.filter.UrlFilter
 import com.storyteller_f.amiqin.ui.theme.AmiqinTheme
 import com.storyteller_f.config_core.Config
+import com.storyteller_f.config_core.DefaultDialog
 import com.storyteller_f.config_core.EditorKey
 import com.storyteller_f.config_core.editor
+import com.storyteller_f.filter_core.Filter
+import com.storyteller_f.filter_core.config.FilterConfigItem
+import com.storyteller_f.filter_core.filter.simple.SimpleRegExpFilter
 import com.storyteller_f.shi.Factory
+import com.storyteller_f.shi.TitleFilterConfigItem
+import com.storyteller_f.shi.UrlFilterConfigItem
 import com.storyteller_f.sort_core.config.SortConfig
-import com.storyteller_f.sort_ui.SortDialog
+import com.storyteller_f.sort_core.config.sortConfigAdapterFactory
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -79,40 +89,33 @@ class MainActivity : ComponentActivity() {
                         .statusBarsPadding(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Amiqin(::show, ::current)
+                    Amiqin(::current)
                 }
             }
         }
-    }
-
-    private fun show() {
-//        AmiqinFilterDialogFragment().show(fragmentManager, "test")
     }
 
     private fun current(): Config? {
         val createEditorKey = EditorKey.createEditorKey(filesDir.absolutePath, "sort")
         return createEditorKey.editor(
             SortConfig.emptySortListener,
-            SortDialog.configAdapterFactory,
+            sortConfigAdapterFactory,
             Factory.factory
         ).lastConfig
     }
 }
 
 @Composable
-fun Amiqin(showDialog: () -> Unit = {}, current: () -> Config? = { null }) {
+fun Amiqin(current: () -> Config? = { null }) {
     var search by rememberSaveable { mutableStateOf("") }
-    val pager by remember(search) {
-        derivedStateOf {
-            Pager(PagingConfig(30)) {
-                HistoryPagingSource(search = search)
-            }
-        }
+
+    var showFilterDialog by remember {
+        mutableStateOf(false)
     }
     Column {
         Row {
             Button(onClick = {
-                showDialog()
+                showFilterDialog = true
             }) {
                 Text(text = "filter")
             }
@@ -125,8 +128,44 @@ fun Amiqin(showDialog: () -> Unit = {}, current: () -> Config? = { null }) {
             }
         }
         Text(text = search.ifEmpty { "empty" })
-        HistoryContent(pager)
+        HistoryContent(search)
     }
+    if (showFilterDialog)
+        FilterDialog(
+            suffix = "filter",
+            close = { showFilterDialog = false },
+            listener = object : DefaultDialog.Listener<Filter<HistoryEntry>, FilterConfigItem> {
+                override fun onSaveState(oList: List<Filter<HistoryEntry>>): List<FilterConfigItem> =
+                    oList.mapNotNull {
+                        when (it) {
+                            is SimpleRegExpFilter -> it.item
+                            else -> {null}
+                        }
+                    }
+
+                override fun onRestoreState(configItems: List<FilterConfigItem>) =
+                    configItems.mapNotNull {
+                        when (it) {
+                            is TitleFilterConfigItem -> TitleFilter(it)
+                            is UrlFilterConfigItem -> UrlFilter(it)
+                            else -> {null}
+                        }
+                    }
+
+                override fun onActiveChanged(activeList: List<Filter<HistoryEntry>>) = Unit
+                override fun onEditingChanged(editing: List<Filter<HistoryEntry>>) {
+                }
+
+            },
+            filters = listOf(TitleFilter(TitleFilterConfigItem("^$"))),
+            factory = Factory.factory
+        ) { filter, itemChange ->
+            if (filter is TitleFilter) {
+                SimpleFilterView(filter = filter, refresh = itemChange, dup = {
+                    TitleFilter(TitleFilterConfigItem(it))
+                })
+            }
+        }
 }
 
 @Preview(showBackground = true)
@@ -138,7 +177,14 @@ fun DefaultPreview() {
 }
 
 @Composable
-fun HistoryContent(pager: Pager<Int, HistoryEntry>) {
+fun HistoryContent(search: String) {
+    val pager by remember(search) {
+        derivedStateOf {
+            Pager(PagingConfig(30)) {
+                HistoryPagingSource(search = search)
+            }
+        }
+    }
     val list = pager.flow.collectAsLazyPagingItems()
     when (val loadState = list.loadState.refresh) {
         is LoadState.Loading -> {
@@ -157,8 +203,7 @@ fun HistoryContent(pager: Pager<Int, HistoryEntry>) {
                     key = list.itemKey(key = {
                         it.entryId
                     }),
-                    contentType = list.itemContentType(
-                    )
+                    contentType = list.itemContentType()
                 ) { index ->
                     val item = list[index]
                     if (item != null)

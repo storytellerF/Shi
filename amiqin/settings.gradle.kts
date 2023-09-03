@@ -1,4 +1,7 @@
+@file:Suppress("UnstableApiUsage")
+
 val filterFolder: String? by settings
+val filterModule: String? by settings
 
 pluginManagement {
     repositories {
@@ -30,15 +33,7 @@ val currentFolder = when (filterFolder) {
     else -> null
 }
 if (currentFolder?.exists() == true) {
-    val l = listOf(
-        "config-core",
-        "filter-core",
-        "sort-core",
-        "config_edit",
-        "filter-ui",
-        "sort-ui",
-        "recycleview_ui_extra"
-    )
+    val l = filterModule?.split(",").orEmpty()
     l.forEach {
         include("filter:$it")
         project(":filter:$it").projectDir = File(currentFolder, it)

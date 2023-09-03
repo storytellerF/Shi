@@ -1,5 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
+val filterFolder: String? by project
 plugins {
     id("java-library")
     id("org.jetbrains.kotlin.jvm")
@@ -28,7 +28,7 @@ dependencies {
         }
     } else {
         filterArtifact.forEach {
-            api("com.github.storytellerF.FilterUIProject:$it:2.0")
+            api("com.github.storytellerF.FilterUIProject:$it:$filterFolder")
         }
     }
 }

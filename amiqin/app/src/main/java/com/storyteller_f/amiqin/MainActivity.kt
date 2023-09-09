@@ -127,7 +127,8 @@ fun Amiqin(current: () -> Config? = { null }) {
                 Text(text = "start")
             }
         }
-        Text(text = search.ifEmpty { "empty" })
+        if (BuildConfig.DEBUG)
+            Text(text = search.ifEmpty { "null" })
         HistoryContent(search)
     }
     if (showFilterDialog)
@@ -139,7 +140,9 @@ fun Amiqin(current: () -> Config? = { null }) {
                     oList.mapNotNull {
                         when (it) {
                             is SimpleRegExpFilter -> it.item
-                            else -> {null}
+                            else -> {
+                                null
+                            }
                         }
                     }
 
@@ -148,7 +151,9 @@ fun Amiqin(current: () -> Config? = { null }) {
                         when (it) {
                             is TitleFilterConfigItem -> TitleFilter(it)
                             is UrlFilterConfigItem -> UrlFilter(it)
-                            else -> {null}
+                            else -> {
+                                null
+                            }
                         }
                     }
 

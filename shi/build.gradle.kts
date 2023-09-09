@@ -15,11 +15,13 @@ version = "0.0.1"
 application {
     mainClass.set("com.storyteller_f.ApplicationKt")
 
-    val isDevelopment: Boolean = project.ext.has("development")
+//    val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=true")
 }
 
 dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+
     implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-swagger:$ktorVersion")
     implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktorVersion")

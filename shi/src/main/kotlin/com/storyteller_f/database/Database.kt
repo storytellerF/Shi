@@ -2,11 +2,8 @@ package com.storyteller_f.database
 
 import com.storyteller_f.config_core.ConfigItem
 import com.storyteller_f.filter_core.config.FilterConfig
-import com.storyteller_f.filter_core.config.FilterConfigItem
 import com.storyteller_f.filter_core.config.SimpleRegExpConfigItem
 import com.storyteller_f.obj.*
-import com.storyteller_f.shi.TitleFilterConfigItem
-import com.storyteller_f.shi.UrlFilterConfigItem
 import kotlinx.coroutines.*
 import org.h2.util.SmallLRUCache
 import org.jetbrains.exposed.sql.*
@@ -91,7 +88,7 @@ class HistoryFacadeImpl : HistoryFacade {
 
     private fun convert(it: ResultRow): HistoryEntry {
         return HistoryEntry(
-            it[HistoryEntries.id.count()],
+            it[HistoryEntries.id].value,
             hostString(it[HistoryEntries.host]),
             hostString(it[HistoryEntries.mainHost]),
             it[HistoryEntries.visitTime],

@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-val filterFolder: String? by project
+
+val shunFolder: String? by project
 plugins {
     id("java-library")
     id("org.jetbrains.kotlin.jvm")
@@ -17,18 +18,14 @@ tasks.withType<KotlinCompile>().configureEach {
 }
 
 dependencies {
-    val filterArtifact = listOf("config-core", "filter-core", "sort-core")
+    val shunCoreArtifact = listOf("config-core", "filter-core", "sort-core")
 
-    val filterModules = filterArtifact.mapNotNull {
+    val filterModules = shunCoreArtifact.mapNotNull {
         findProject(":filter:$it")
     }
-    if (filterModules.size == filterArtifact.size) {
-        filterModules.forEach {
-            api(it)
-        }
-    } else {
-        filterArtifact.forEach {
-            api("com.github.storytellerF.FilterUIProject:$it:$filterFolder")
-        }
+    if (filterModules.size == shunCoreArtifact.size) filterModules.forEach {
+        api(it)
+    } else shunCoreArtifact.forEach {
+        api("com.github.storytellerF.Shun:$it:$shunFolder")
     }
 }

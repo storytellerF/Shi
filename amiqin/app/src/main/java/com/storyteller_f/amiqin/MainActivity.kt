@@ -65,20 +65,19 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.Serializable
 import java.util.Calendar
 
-lateinit var httpClient: HttpClient
+val httpClient: HttpClient by lazy {
+    HttpClient(CIO) {
+        install(ContentNegotiation) {
+            json()
+        }
+    }
+}
 
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        httpClient = HttpClient(CIO) {
-            install(ContentNegotiation) {
-                json()
-            }
-        }
-
 
         setContent {
             AmiqinTheme {
@@ -140,9 +139,7 @@ fun Amiqin(current: () -> Config? = { null }) {
                     oList.mapNotNull {
                         when (it) {
                             is SimpleRegExpFilter -> it.item
-                            else -> {
-                                null
-                            }
+                            else -> null
                         }
                     }
 
@@ -151,9 +148,7 @@ fun Amiqin(current: () -> Config? = { null }) {
                         when (it) {
                             is TitleFilterConfigItem -> TitleFilter(it)
                             is UrlFilterConfigItem -> UrlFilter(it)
-                            else -> {
-                                null
-                            }
+                            else -> null
                         }
                     }
 
@@ -162,12 +157,31 @@ fun Amiqin(current: () -> Config? = { null }) {
                 }
 
             },
-            filters = listOf(TitleFilter(TitleFilterConfigItem("^$"))),
+            filters = listOf(TitleFilter(TitleFilterConfigItem("^$", 0, null))),
             factory = Factory.factory
         ) { filter, itemChange ->
             if (filter is TitleFilter) {
-                SimpleFilterView(filter = filter, refresh = itemChange, dup = {
-                    TitleFilter(TitleFilterConfigItem(it))
+                SimpleFilterView(filter = filter, updateName = {
+                    itemChange.change(
+                        TitleFilter(
+                            TitleFilterConfigItem(
+                                filter.regexp,
+                                filter.id,
+                                filter.item.name
+                            )
+                        )
+                    )
+                }, updateRegExp = {
+                    itemChange.change(
+                        TitleFilter(
+                            TitleFilterConfigItem(
+                                it,
+                                filter.id,
+                                filter.item.name
+                            )
+                        )
+                    )
+
                 })
             }
         }

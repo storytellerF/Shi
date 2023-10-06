@@ -14,7 +14,6 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
     repositories {
-        maven { setUrl("https://artifactory.cronapp.io/public-release/") }
         maven { setUrl("https://jitpack.io") }
         google()
         mavenCentral()

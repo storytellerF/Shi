@@ -3,6 +3,8 @@ val kotlinVersion: String by project
 val logbackVersion: String by project
 val exposedVersion: String by project
 val h2Version: String by project
+val dev: String by project
+
 
 plugins {
     kotlin("jvm") version "1.8.0"
@@ -15,8 +17,11 @@ version = "0.0.1"
 application {
     mainClass.set("com.storyteller_f.ApplicationKt")
 
-//    val isDevelopment: Boolean = project.ext.has("development")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=true")
+    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=${dev}")
+}
+
+kotlin {
+    jvmToolchain(17)
 }
 
 dependencies {

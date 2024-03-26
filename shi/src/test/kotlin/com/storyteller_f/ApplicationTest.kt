@@ -1,5 +1,6 @@
 package com.storyteller_f
 
+import com.storyteller_f.database.DatabaseFactory
 import io.ktor.server.routing.*
 import io.ktor.http.*
 import io.ktor.server.plugins.swagger.*
@@ -22,6 +23,7 @@ class ApplicationTest {
     @Test
     fun testRoot() = testApplication {
         application {
+            DatabaseFactory.init()
             configureRouting()
         }
         client.get("/").apply {

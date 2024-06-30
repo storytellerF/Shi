@@ -55,14 +55,15 @@ import com.storyteller_f.config_core.editor
 import com.storyteller_f.filter_core.Filter
 import com.storyteller_f.filter_core.config.FilterConfigItem
 import com.storyteller_f.filter_core.filter.simple.SimpleRegExpFilter
-import com.storyteller_f.shi.*
+import com.storyteller_f.shi.Factory
+import com.storyteller_f.shi.TitleFilterConfigItem
+import com.storyteller_f.shi.UrlFilterConfigItem
 import com.storyteller_f.sort_core.config.SortConfig
 import com.storyteller_f.sort_core.config.sortConfigAdapterFactory
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.serialization.Serializable
 import java.util.Calendar
 
 val httpClient: HttpClient by lazy {

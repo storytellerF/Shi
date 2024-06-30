@@ -1,20 +1,10 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 val shunFolder: String? by project
 plugins {
-    id("java-library")
     id("org.jetbrains.kotlin.jvm")
 }
 
-val javaVersion = JavaVersion.VERSION_17
-java {
-    sourceCompatibility = javaVersion
-    targetCompatibility = javaVersion
-}
-tasks.withType<KotlinCompile>().configureEach {
-    kotlinOptions {
-        jvmTarget = javaVersion.toString()
-    }
+kotlin {
+    jvmToolchain(17)
 }
 
 dependencies {
